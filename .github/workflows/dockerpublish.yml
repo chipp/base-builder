@@ -50,6 +50,7 @@ jobs:
              --push \
              --build-arg TARGET=${{ matrix.target }} \
              --build-arg OPENSSL_ARCH=${{ matrix.openssl_arch }} \
+             --build-arg GITHUB_REPO=https://github.com/$GITHUB_REPOSITORY \
              --tag $IMAGE_ID:$VERSION \
              --tag $IMAGE_ID:latest \
              --cache-from=type=registry,ref=ghcr.io/$OWNER/$IMAGE_NAME:cache \
