@@ -2,9 +2,6 @@ FROM debian:buster-slim
 
 ARG TARGET=x86_64-unknown-linux-musl
 ARG OPENSSL_ARCH=linux-x86_64
-ARG GITHUB_REPO
-
-LABEL org.opencontainers.image.source ${GITHUB_REPO}
 
 RUN apt-get update && apt-get install -y \
   curl \
