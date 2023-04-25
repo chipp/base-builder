@@ -29,7 +29,6 @@ RUN curl -sSL -o musl.zip https://github.com/richfelker/musl-cross-make/archive/
   cd .. && rm -rf musl-cross-make musl.zip
 
 ENV PREFIX=/musl/$TARGET \
-  PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
   LD_LIBRARY_PATH=$PREFIX \
   PATH=/musl/bin:$PATH
 
@@ -58,8 +57,8 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   make -j$(nproc) && make install && \
   cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
-ENV SSL_VER=1.1.1s
-ENV SSL_SHA256="c5ac01e760ee6ff0dab61d6b2bbd30146724d063eb322180c6f18a6f74e4b6aa"
+ENV SSL_VER=1.1.1t
+ENV SSL_SHA256="8dee9b24bdb1dcbf0c3d1e9b02fb8f6bf22165e807f45adeb7c9677536859d3b"
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
   tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
@@ -68,8 +67,8 @@ RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   make -j$(nproc) && make install_sw && \
   cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
 
-ENV CURL_VER=7.86.0
-ENV CURL_SHA256="3dfdd39ba95e18847965cd3051ea6d22586609d9011d91df7bc5521288987a82"
+ENV CURL_VER=8.0.1
+ENV CURL_SHA256="5fd29000a4089934f121eff456101f0a5d09e2a3e89da1d714adf06c4be887cb"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
   tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
