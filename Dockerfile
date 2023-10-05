@@ -19,9 +19,9 @@ RUN apt-get update && apt-get install -y \
 
 COPY config.mak config.mak
 
-ENV MUSL_CROSS_MAKE_VER=0.9.9
-ENV MUSL_CROSS_MAKE_SHA256="6cbe2f6ce92e7f8f3973786aaf0b990d0db380c0e0fc419a7d516df5bb03c891"
-RUN curl -sSL -o musl.zip https://github.com/richfelker/musl-cross-make/archive/v$MUSL_CROSS_MAKE_VER.zip && \
+ENV MUSL_CROSS_MAKE_VER=0.9.10
+ENV MUSL_CROSS_MAKE_SHA256="5d503a7cfdf09c7974bf26a2281d1361fa23364b18a4aa52b5d72960d70921f8"
+RUN curl -sSL -o musl.zip https://github.com/chipp/musl-cross-make/archive/v$MUSL_CROSS_MAKE_VER.zip && \
   echo "$MUSL_CROSS_MAKE_SHA256  musl.zip" | sha256sum -c -; \
   unzip musl.zip && mv musl-cross-make-${MUSL_CROSS_MAKE_VER} musl-cross-make && cd musl-cross-make && \
   mv ../config.mak ./ && \
@@ -52,8 +52,8 @@ ENV CC=$TARGET_CC \
   PKG_CONFIG_ALL_STATIC=true \
   PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig:$PREFIX/lib64/pkgconfig
 
-ENV ZLIB_VER=1.2.13
-ENV ZLIB_SHA256="b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30"
+ENV ZLIB_VER=1.3
+ENV ZLIB_SHA256="ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e"
 RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   echo "$ZLIB_SHA256  zlib-$ZLIB_VER.tar.gz" | sha256sum -c - && \
   tar xfz zlib-${ZLIB_VER}.tar.gz && cd zlib-$ZLIB_VER && \
@@ -62,8 +62,8 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   make -j$(nproc) && make install && \
   cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
-ENV SSL_VER=3.0.8
-ENV SSL_SHA256="6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a41253e4b3e"
+ENV SSL_VER=3.0.11
+ENV SSL_SHA256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55"
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
   tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
@@ -72,8 +72,8 @@ RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   make -j$(nproc) && make install_sw && \
   cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
 
-ENV CURL_VER=8.0.1
-ENV CURL_SHA256="5fd29000a4089934f121eff456101f0a5d09e2a3e89da1d714adf06c4be887cb"
+ENV CURL_VER=8.3.0
+ENV CURL_SHA256="d3a19aeea301085a56c32bc0f7d924a818a7893af253e41505d1e26d7db8e95a"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
   tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
