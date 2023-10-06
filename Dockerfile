@@ -61,7 +61,9 @@ ENV SSL_SHA256="b3425d3bb4a2218d0697eb41f7fc0cdede016ed19ca49d168b78e8d947887f55
 RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   echo "$SSL_SHA256  openssl-$SSL_VER.tar.gz" | sha256sum -c - && \
   tar xfz openssl-${SSL_VER}.tar.gz && cd openssl-$SSL_VER && \
-  CC=gcc CXX=g++ ./Configure -fPIC --cross-compile-prefix=${TARGET}- --prefix=$PREFIX --openssldir=$PREFIX/ssl ${ADDITIONAL_LIBS} no-zlib no-shared no-module $OPENSSL_ARCH && \
+  CC=gcc CXX=g++ ./Configure -fPIC --cross-compile-prefix=${TARGET}- \
+  --prefix=$PREFIX --openssldir=$PREFIX/ssl ${ADDITIONAL_LIBS} \
+  no-tests no-zlib no-shared no-module $OPENSSL_ARCH && \
   env C_INCLUDE_PATH=$PREFIX/include make depend 2> /dev/null && \
   make -j$(nproc) && make install_sw && \
   cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
