@@ -1,3 +1,5 @@
+MUSL_VER = 1.2.4
+
 OUTPUT = /musl
 DL_CMD = curl -C - -L -o
 

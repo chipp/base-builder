@@ -17,16 +17,10 @@ RUN apt-get update && apt-get install -y \
   --no-install-recommends && \
   rm -rf /var/lib/apt/lists/*
 
-COPY config.mak config.mak
-
-ENV MUSL_CROSS_MAKE_VER=0.9.10
-ENV MUSL_CROSS_MAKE_SHA256="5d503a7cfdf09c7974bf26a2281d1361fa23364b18a4aa52b5d72960d70921f8"
-RUN curl -sSL -o musl.zip https://github.com/chipp/musl-cross-make/archive/v$MUSL_CROSS_MAKE_VER.zip && \
-  echo "$MUSL_CROSS_MAKE_SHA256  musl.zip" | sha256sum -c -; \
-  unzip musl.zip && mv musl-cross-make-${MUSL_CROSS_MAKE_VER} musl-cross-make && cd musl-cross-make && \
-  mv ../config.mak ./ && \
-  TARGET=$TARGET make -j$(nproc) install > /dev/null && \
-  cd .. && rm -rf musl-cross-make musl.zip
+COPY musl-cross-make musl-cross-make
+RUN cd musl-cross-make && \
+  TARGET=$TARGET make -j$(nproc) install && \
+  cd .. && rm -rf musl-cross-make
 
 ARG ADDITIONAL_LIBS
 
