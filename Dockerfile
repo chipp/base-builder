@@ -69,7 +69,7 @@ RUN curl -sSL -O https://www.openssl.org/source/openssl-$SSL_VER.tar.gz && \
   cd .. && rm -rf openssl-$SSL_VER openssl-$SSL_VER.tar.gz
 
 ENV CURL_VER=8.4.0
-ENV CURL_SHA256="dc233009b3a841fc3983c40527f6b87632abe3d10c07c7416d2da0179fd9e03b"
+ENV CURL_SHA256="816e41809c043ff285e8c0f06a75a1fa250211bbfb2dc0a037eeef39f1a9e427"
 RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   echo "$CURL_SHA256  curl-$CURL_VER.tar.gz" | sha256sum -c - && \
   tar xfz curl-${CURL_VER}.tar.gz && cd curl-$CURL_VER && \
