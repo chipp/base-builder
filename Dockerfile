@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
   bzip2 \
   patch \
   build-essential \
+  cmake \
   file \
   pkg-config \
   ca-certificates \
@@ -52,7 +53,7 @@ RUN curl -sSL -O https://zlib.net/zlib-$ZLIB_VER.tar.gz && \
   echo "$ZLIB_SHA256  zlib-$ZLIB_VER.tar.gz" | sha256sum -c - && \
   tar xfz zlib-${ZLIB_VER}.tar.gz && cd zlib-$ZLIB_VER && \
   CC="$CC -fPIC -pie" LDFLAGS="-L$PREFIX/lib" CFLAGS="-I$PREFIX/include" \
-  CHOST=arm ./configure --static --prefix=$PREFIX && \
+  ./configure --static --prefix=$PREFIX && \
   make -j$(nproc) && make install && \
   cd .. && rm -rf zlib-$ZLIB_VER zlib-$ZLIB_VER.tar.gz
 
@@ -79,9 +80,18 @@ RUN curl -sSL -O https://curl.haxx.se/download/curl-$CURL_VER.tar.gz && \
   --disable-shared --disable-ldap --disable-sspi --without-librtmp --disable-ftp \
   --disable-file --disable-dict --disable-telnet --disable-tftp --disable-manual --disable-ldaps \
   --disable-dependency-tracking --disable-rtsp --disable-pop3  --disable-imap --disable-smtp \
-  --disable-gopher --disable-smb --without-libidn --disable-proxy --host armv7 && \
+  --disable-gopher --disable-smb --without-libidn --disable-proxy --host=$TARGET && \
   make -j$(nproc) curl_LDFLAGS="-all-static" && make install && \
   cd .. && rm -rf curl-$CURL_VER curl-$CURL_VER.tar.gz
+
+ENV SQLITE_VER=3440000
+ENV SQLITE_SHA256="b9cd386e7cd22af6e0d2a0f06d0404951e1bef109e42ea06cc0450e10cd15550"
+RUN curl -sSL -O https://www.sqlite.org/2023/sqlite-autoconf-$SQLITE_VER.tar.gz && \
+  echo "$SQLITE_SHA256  sqlite-autoconf-$SQLITE_VER.tar.gz" | sha256sum -c - && \
+  tar xfz sqlite-autoconf-${SQLITE_VER}.tar.gz && cd sqlite-autoconf-$SQLITE_VER && \
+  CC="$CC -fPIC -pie" ./configure --enable-shared=no --host $TARGET && \
+  make -j$(nproc) && make install && \
+  cd .. && rm -rf sqlite-autoconf-$SQLITE_VER sqlite-autoconf-$SQLITE_VER.tar.gz
 
 ENV OPENSSL_STATIC=1 \
   OPENSSL_DIR=$PREFIX \
