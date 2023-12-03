@@ -22,8 +22,6 @@ RUN cd musl-cross-make && \
   TARGET=$TARGET make -j$(nproc) install && \
   cd .. && rm -rf musl-cross-make
 
-ARG ADDITIONAL_LIBS
-
 ENV TARGET=${TARGET} \
   PREFIX=/musl/$TARGET \
   LD_LIBRARY_PATH=$PREFIX \
