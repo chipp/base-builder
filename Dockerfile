@@ -1,19 +1,27 @@
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 
 ARG TARGET=x86_64-unknown-linux-musl
 
 RUN apt-get update && apt-get install -y \
-  curl \
-  xutils-dev \
-  unzip \
-  xz-utils \
-  bzip2 \
-  patch \
+  autoconf \
+  automake \
   build-essential \
-  cmake \
-  file \
-  pkg-config \
+  bzip2 \
   ca-certificates \
+  cmake \
+  curl \
+  file \
+  gettext \
+  libtool \
+  musl \
+  ninja-build \
+  patch \
+  pkg-config \
+  python3 \
+  python3-venv \
+  unzip \
+  xutils-dev \
+  xz-utils \
   --no-install-recommends && \
   rm -rf /var/lib/apt/lists/*
 
@@ -24,8 +32,11 @@ RUN cd musl-cross-make && \
 
 ENV TARGET=${TARGET} \
   PREFIX=/musl/$TARGET \
-  LD_LIBRARY_PATH=$PREFIX \
-  PATH=/musl/bin:$PATH
+  LD_LIBRARY_PATH=/musl/$TARGET \
+  PATH=/musl/bin:/python/bin:$PATH
+
+COPY meson/${TARGET}.cross /musl/meson.cross
+RUN python3 -m venv python && pip3 install meson
 
 ENV TARGET_CC=/musl/bin/$TARGET-gcc \
   TARGET_CXX=/musl/bin/$TARGET-g++ \
