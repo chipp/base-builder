@@ -1,0 +1,14 @@
+[binaries]
+c = '/musl/bin/armv7-unknown-linux-musleabihf-gcc'
+cpp = '/musl/bin/armv7-unknown-linux-musleabihf-g++'
+ar = '/musl/bin/armv7-unknown-linux-musleabihf-gcc-ar'
+nm = '/musl/bin/armv7-unknown-linux-musleabihf-gcc-nm'
+ld = '/musl/bin/armv7-unknown-linux-musleabihf-ld'
+strip = '/musl/bin/armv7-unknown-linux-musleabihf-strip'
+pkg-config = '/usr/bin/pkg-config'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'arm'
+cpu = 'armv7-a'
+endian = 'little'

@@ -1,0 +1,14 @@
+[binaries]
+c = '/musl/bin/x86_64-unknown-linux-musl-gcc'
+cpp = '/musl/bin/x86_64-unknown-linux-musl-g++'
+ar = '/musl/bin/x86_64-unknown-linux-musl-gcc-ar'
+nm = '/musl/bin/x86_64-unknown-linux-musl-gcc-nm'
+ld = '/musl/bin/x86_64-unknown-linux-musl-ld'
+strip = '/musl/bin/x86_64-unknown-linux-musl-strip'
+pkg-config = '/usr/bin/pkg-config'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'
