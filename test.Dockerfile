@@ -1,6 +1,6 @@
-ARG VARIANT
+ARG IMAGE
 
-FROM ghcr.io/chipp/build.musl.${VARIANT}:test
+FROM ${IMAGE}
 
 RUN apt-get update && apt-get install -y \
     git \

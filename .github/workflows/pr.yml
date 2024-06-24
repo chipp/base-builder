@@ -33,18 +33,19 @@ jobs:
       - name: Build and test image
         run: |
           IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
+          TEST_TAG=test-linux-amd64
 
           echo IMAGE_ID=$IMAGE_ID
 
           docker buildx build . \
              --push \
              --build-arg TARGET="${{ matrix.target }}" \
-             --tag $IMAGE_ID:test \
+             --tag $IMAGE_ID:$TEST_TAG \
              --cache-from=type=registry,ref=$IMAGE_ID:cache-linux-amd64 \
              --cache-to=type=registry,ref=$IMAGE_ID:cache-linux-amd64,mode=max
 
           docker buildx build . \
             --file test.Dockerfile \
             --load \
-            --build-arg VARIANT=${{ matrix.tag }} \
+            --build-arg IMAGE=$IMAGE_ID:$TEST_TAG \
             --tag $IMAGE_ID:validate

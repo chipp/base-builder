@@ -7,23 +7,56 @@ tag:
 	git tag $(VERSION)_$(NEXT_REVISION) HEAD
 	git push origin $(VERSION)_$(NEXT_REVISION)
 
+test_x86_64: TARGET=x86_64-unknown-linux-musl
+test_x86_64: VARIANT=x86_64_musl
+test_x86_64: IMAGE_ID=ghcr.io/chipp/build.musl.${VARIANT}
 test_x86_64:
-	docker build . -t ghcr.io/chipp/build.musl.x86_64_musl:test \
-		--build-arg TARGET=x86_64-unknown-linux-musl \
-		--load \
-		--progress=plain
+	docker buildx build . \
+		--push \
+		--build-arg TARGET="${TARGET}" \
+		--tag ${IMAGE_ID}:test-linux-arm64 \
+		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64 \
+		--cache-to=type=registry,ref=${IMAGE_ID}:cache-linux-arm64,mode=max
 
+	docker buildx build . \
+		--file test.Dockerfile \
+		--load \
+		--build-arg IMAGE=${IMAGE_ID}:test-linux-arm64 \
+		--tag ${IMAGE_ID}:validate
+
+test_armv7: TARGET=armv7-unknown-linux-musleabihf
+test_armv7: VARIANT=armv7_musl
+test_armv7: IMAGE_ID=ghcr.io/chipp/build.musl.${VARIANT}
 test_armv7:
-	docker build . -t ghcr.io/chipp/build.musl.armv7_musl:test \
-		--build-arg TARGET=armv7-unknown-linux-musleabihf \
-		--load \
-		--progress=plain
+	docker buildx build . \
+		--push \
+		--build-arg TARGET="${TARGET}" \
+		--tag ${IMAGE_ID}:test-linux-arm64 \
+		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64 \
+		--cache-to=type=registry,ref=${IMAGE_ID}:cache-linux-arm64,mode=max
 
-test_arm64:
-	docker build . -t ghcr.io/chipp/build.musl.arm64_musl:test \
-		--build-arg TARGET=aarch64-linux-musl \
+	docker buildx build . \
+		--file test.Dockerfile \
 		--load \
-		--progress=plain
+		--build-arg IMAGE=${IMAGE_ID}:test-linux-arm64 \
+		--tag ${IMAGE_ID}:validate
+
+test_arm64: TARGET=aarch64-linux-musl
+test_arm64: VARIANT=arm64_musl
+test_arm64: IMAGE_ID=ghcr.io/chipp/build.musl.${VARIANT}
+test_arm64:
+	docker buildx build . \
+		--push \
+		--build-arg TARGET="${TARGET}" \
+		--tag ${IMAGE_ID}:test-linux-arm64 \
+		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64 \
+		--cache-to=type=registry,ref=${IMAGE_ID}:cache-linux-arm64,mode=max
+
+	docker buildx build . \
+		--file test.Dockerfile \
+		--load \
+		--build-arg IMAGE=${IMAGE_ID}:test-linux-arm64 \
+		--tag ${IMAGE_ID}:validate
 
 test: test_x86_64 test_armv7 test_arm64
 
