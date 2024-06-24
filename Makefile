@@ -15,11 +15,11 @@ test_x86_64:
 		--push \
 		--build-arg TARGET="${TARGET}" \
 		--tag ${IMAGE_ID}:test-linux-arm64 \
-		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64 \
-		--cache-to=type=registry,ref=${IMAGE_ID}:cache-linux-arm64,mode=max
+		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64
 
 	docker buildx build . \
 		--file test.Dockerfile \
+		--builder container \
 		--load \
 		--build-arg IMAGE=${IMAGE_ID}:test-linux-arm64 \
 		--tag ${IMAGE_ID}:validate
@@ -32,8 +32,7 @@ test_armv7:
 		--push \
 		--build-arg TARGET="${TARGET}" \
 		--tag ${IMAGE_ID}:test-linux-arm64 \
-		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64 \
-		--cache-to=type=registry,ref=${IMAGE_ID}:cache-linux-arm64,mode=max
+		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64
 
 	docker buildx build . \
 		--file test.Dockerfile \
@@ -49,8 +48,7 @@ test_arm64:
 		--push \
 		--build-arg TARGET="${TARGET}" \
 		--tag ${IMAGE_ID}:test-linux-arm64 \
-		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64 \
-		--cache-to=type=registry,ref=${IMAGE_ID}:cache-linux-arm64,mode=max
+		--cache-from=type=registry,ref=${IMAGE_ID}:cache-linux-arm64
 
 	docker buildx build . \
 		--file test.Dockerfile \
