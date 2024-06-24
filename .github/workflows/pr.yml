@@ -12,6 +12,7 @@ jobs:
     strategy:
       matrix:
         tag: [x86_64_musl, armv7_musl, arm64_musl]
+        platform: [linux/amd64, linux/arm64]
         include:
           - tag: x86_64_musl
             target: x86_64-unknown-linux-musl
@@ -19,6 +20,10 @@ jobs:
             target: armv7-unknown-linux-musleabihf
           - tag: arm64_musl
             target: aarch64-linux-musl
+          - platform: linux/amd64
+            suffix: linux-amd64
+          - platform: linux/arm64
+            suffix: linux-arm64
 
     steps:
       - uses: actions/checkout@v2
@@ -26,14 +31,17 @@ jobs:
       - name: Log into registry
         run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and test image
         run: |
           IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
-          TEST_TAG=test-linux-amd64
+          TEST_TAG=test-${{ matrix.suffix }}
 
           echo IMAGE_ID=$IMAGE_ID
 
@@ -41,11 +49,13 @@ jobs:
              --push \
              --build-arg TARGET="${{ matrix.target }}" \
              --tag $IMAGE_ID:$TEST_TAG \
-             --cache-from=type=registry,ref=$IMAGE_ID:cache-linux-amd64 \
-             --cache-to=type=registry,ref=$IMAGE_ID:cache-linux-amd64,mode=max
+             --platform ${{ matrix.platform }} \
+             --cache-from=type=registry,ref=$IMAGE_ID:cache-${{ matrix.suffix }} \
+             --cache-to=type=registry,ref=$IMAGE_ID:cache-${{ matrix.suffix }},mode=max
 
           docker buildx build . \
             --file test.Dockerfile \
             --load \
+            --platform ${{ matrix.platform }} \
             --build-arg IMAGE=$IMAGE_ID:$TEST_TAG \
             --tag $IMAGE_ID:validate
