@@ -24,6 +24,8 @@ test_x86_64:
 		--build-arg IMAGE=${IMAGE_ID}:test-linux-arm64 \
 		--tag ${IMAGE_ID}:validate
 
+	docker rmi ${IMAGE_ID}:validate
+
 test_armv7: TARGET=armv7-unknown-linux-musleabihf
 test_armv7: VARIANT=armv7_musl
 test_armv7: IMAGE_ID=ghcr.io/chipp/build.musl.${VARIANT}
@@ -40,6 +42,8 @@ test_armv7:
 		--build-arg IMAGE=${IMAGE_ID}:test-linux-arm64 \
 		--tag ${IMAGE_ID}:validate
 
+	docker rmi ${IMAGE_ID}:validate
+
 test_arm64: TARGET=aarch64-linux-musl
 test_arm64: VARIANT=arm64_musl
 test_arm64: IMAGE_ID=ghcr.io/chipp/build.musl.${VARIANT}
@@ -55,6 +59,8 @@ test_arm64:
 		--load \
 		--build-arg IMAGE=${IMAGE_ID}:test-linux-arm64 \
 		--tag ${IMAGE_ID}:validate
+
+	docker rmi ${IMAGE_ID}:validate
 
 test: test_x86_64 test_armv7 test_arm64
 
