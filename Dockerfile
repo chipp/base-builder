@@ -28,7 +28,8 @@ RUN apt-get update && apt-get install -y \
 COPY musl-cross-make musl-cross-make
 RUN cd musl-cross-make && \
   TARGET=$TARGET make -j$(nproc) install && \
-  cd .. && rm -rf musl-cross-make
+  cd .. && rm -rf musl-cross-make && \
+  find /musl -name "*.la" -print0 | xargs -0 sed -i "s|libdir='/${TARGET}/lib'|libdir='/musl/${TARGET}/lib'|g"
 
 ENV TARGET=${TARGET} \
   PREFIX=/musl/$TARGET \
@@ -48,7 +49,6 @@ ENV CC=$TARGET_CC \
   CHOST=$TARGET \
   CROSS_PREFIX=$TARGET- \
   LDFLAGS="-L$PREFIX/lib -L$PREFIX/lib64" \
-  CFLAGS="-I$PREFIX/include" \
   CPPFLAGS="-I$PREFIX/include" \
   PKG_CONFIG_ALLOW_CROSS=true \
   PKG_CONFIG_ALL_STATIC=true \
