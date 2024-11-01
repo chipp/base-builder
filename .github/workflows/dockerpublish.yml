@@ -40,7 +40,7 @@ jobs:
           IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
 
           MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
-          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | sort -V | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
           FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
 
           echo IMAGE_ID=$IMAGE_ID
@@ -78,7 +78,7 @@ jobs:
           IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
 
           MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
-          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | sort -V | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
           FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
 
           echo IMAGE_ID=$IMAGE_ID
@@ -104,7 +104,7 @@ jobs:
       - name: Create a tag
         run: |
           MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
-          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | sort -V | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
           FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
 
           git tag $FULL_REVISION HEAD
