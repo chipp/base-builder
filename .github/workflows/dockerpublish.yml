@@ -2,13 +2,12 @@ name: Docker
 
 on:
   push:
-    tags:
-       - '*'
+    branches:
+      - main
 
 jobs:
   build-platforms:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
 
     strategy:
       matrix:
@@ -39,17 +38,21 @@ jobs:
       - name: Build and push image
         run: |
           IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+
+          MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
+          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
 
           echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
+          echo MUSL_VERSION=$MUSL_VERSION
+          echo FULL_REVISION=$FULL_REVISION
 
           docker buildx build . \
              --push \
              --build-arg TARGET="${{ matrix.target }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
              --platform ${{ matrix.platform }} \
-             --tag $IMAGE_ID:$VERSION-${{ matrix.suffix }} \
+             --tag $IMAGE_ID:$FULL_REVISION-${{ matrix.suffix }} \
              --cache-from=type=registry,ref=$IMAGE_ID:cache-${{ matrix.suffix }} \
              --cache-to=type=registry,ref=$IMAGE_ID:cache-${{ matrix.suffix }},mode=max
 
@@ -72,14 +75,25 @@ jobs:
 
       - name: Merge and push
         run: |
-          IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
+          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
 
           echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
+          echo MUSL_VERSION=$MUSL_VERSION
+          echo FULL_REVISION=$FULL_REVISION
 
           docker buildx imagetools create \
-             --tag $IMAGE_ID:$VERSION \
+             --tag $IMAGE_ID:$FULL_REVISION \
              --tag $IMAGE_ID:latest \
-             $IMAGE_ID:$VERSION-linux-amd64 \
-             $IMAGE_ID:$VERSION-linux-arm64
+             $IMAGE_ID:$FULL_REVISION-linux-amd64 \
+             $IMAGE_ID:$FULL_REVISION-linux-arm64
+
+      - name: Create a tag
+        run: |
+          MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
+          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | sort -r | head -n 1 | sed -e 's,.*_\(.*\),\1,')
+          FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
+
+          git tag $FULL_REVISION HEAD
+          git push origin $FULL_REVISION
