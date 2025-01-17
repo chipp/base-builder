@@ -1,6 +1,4 @@
-ARG IMAGE
-
-FROM ${IMAGE}
+FROM base-builder-rs
 
 RUN apt-get update && apt-get install -y \
     git \
