@@ -76,7 +76,7 @@ $(SOURCES):
 
 $(SOURCES)/config.sub: | $(SOURCES)
 	mkdir -p $@.tmp
-	cd $@.tmp && $(DL_CMD) $(notdir $@) "https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=$(CONFIG_SUB_REV)"
+	cd $@.tmp && $(DL_CMD) $(notdir $@) "https://raw.githubusercontent.com/chipp/gnu-config/$(CONFIG_SUB_REV)/config.sub"
 	cd $@.tmp && touch $(notdir $@)
 	cd $@.tmp && $(SHA1_CMD) $(CURDIR)/hashes/$(notdir $@).$(CONFIG_SUB_REV).sha1
 	mv $@.tmp/$(notdir $@) $@

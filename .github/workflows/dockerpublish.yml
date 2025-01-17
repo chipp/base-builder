@@ -7,23 +7,23 @@ on:
 
 jobs:
   build-platforms:
-    runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        tag: [x86_64_musl, armv7_musl, arm64_musl]
-        platform: [linux/amd64, linux/arm64]
+        variant: [x86_64_musl, armv7_musl, arm64_musl]
+        host: [arm64, amd64]
         include:
-          - tag: x86_64_musl
+          - variant: x86_64_musl
             target: x86_64-unknown-linux-musl
-          - tag: armv7_musl
+          - variant: armv7_musl
             target: armv7-unknown-linux-musleabihf
-          - tag: arm64_musl
+          - variant: arm64_musl
             target: aarch64-linux-musl
-          - platform: linux/amd64
-            suffix: linux-amd64
-          - platform: linux/arm64
-            suffix: linux-arm64
+          - host: arm64
+            os: ubuntu-24.04-arm
+          - host: amd64
+            os: ubuntu-24.04
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
@@ -37,7 +37,7 @@ jobs:
 
       - name: Build and push image
         run: |
-          IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
+          IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.variant }}
 
           MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
           LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
@@ -49,19 +49,19 @@ jobs:
 
           docker buildx build . \
              --push \
+             --platform linux/${{ matrix.host }} \
+             --cache-from=type=gha,scope=${{ matrix.variant }}-${{ matrix.host }} \
+             --cache-to=type=gha,scope=${{ matrix.variant }}-${{ matrix.host }},mode=max \
              --build-arg TARGET="${{ matrix.target }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-             --platform ${{ matrix.platform }} \
-             --tag $IMAGE_ID:$FULL_REVISION-${{ matrix.suffix }} \
-             --cache-from=type=registry,ref=$IMAGE_ID:cache-${{ matrix.suffix }} \
-             --cache-to=type=registry,ref=$IMAGE_ID:cache-${{ matrix.suffix }},mode=max
+             --tag $IMAGE_ID:$FULL_REVISION-linux-${{ matrix.host }}
 
   merge-multi-arch:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     needs: build-platforms
     strategy:
       matrix:
-        tag: [x86_64_musl, armv7_musl, arm64_musl]
+        variant: [x86_64_musl, armv7_musl, arm64_musl]
 
     steps:
       - uses: actions/checkout@v2
@@ -71,11 +71,11 @@ jobs:
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@master
+        uses: docker/setup-buildx-action@v3
 
       - name: Merge and push
         run: |
-          IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.tag }}
+          IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.variant }}
 
           MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
           LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
@@ -92,7 +92,7 @@ jobs:
              $IMAGE_ID:$FULL_REVISION-linux-arm64
 
   create-tag:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     needs: merge-multi-arch
 
     steps:
