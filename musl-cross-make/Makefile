@@ -2,12 +2,12 @@
 SOURCES = sources
 
 CONFIG_SUB_REV = 3d5db9ebe860
-BINUTILS_VER = 2.33.1
+BINUTILS_VER = 2.44
 GCC_VER = 9.4.0
-MUSL_VER = 1.2.5
-GMP_VER = 6.1.2
-MPC_VER = 1.1.0
-MPFR_VER = 4.0.2
+MUSL_VER = 1.2.6
+GMP_VER = 6.3.0
+MPC_VER = 1.3.1
+MPFR_VER = 4.2.2
 LINUX_VER = headers-4.19.88-2
 
 GNU_SITE = https://ftpmirror.gnu.org/gnu
@@ -65,6 +65,7 @@ $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/isl*)): SITE = $(ISL_SIT
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/binutils*)): SITE = $(BINUTILS_SITE)
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/gcc*)): SITE = $(GCC_SITE)/$(basename $(basename $(notdir $@)))
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/musl*)): SITE = $(MUSL_SITE)
+$(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-6*)): SITE = $(LINUX_SITE)/v6.x
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-5*)): SITE = $(LINUX_SITE)/v5.x
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-4*)): SITE = $(LINUX_SITE)/v4.x
 $(patsubst hashes/%.sha1,$(SOURCES)/%,$(wildcard hashes/linux-3*)): SITE = $(LINUX_SITE)/v3.x
@@ -79,6 +80,13 @@ $(SOURCES)/config.sub: | $(SOURCES)
 	cd $@.tmp && $(DL_CMD) $(notdir $@) "https://raw.githubusercontent.com/chipp/gnu-config/$(CONFIG_SUB_REV)/config.sub"
 	cd $@.tmp && touch $(notdir $@)
 	cd $@.tmp && $(SHA1_CMD) $(CURDIR)/hashes/$(notdir $@).$(CONFIG_SUB_REV).sha1
+	mv $@.tmp/$(notdir $@) $@
+	rm -rf $@.tmp
+
+$(SOURCES)/binutils-2.47.tar.xz: hashes/binutils-2.47.tar.xz.sha256 | $(SOURCES)
+	mkdir -p $@.tmp
+	cd $@.tmp && $(DL_CMD) $(notdir $@) $(BINUTILS_SITE)/$(notdir $@)
+	cd $@.tmp && sha256sum -c $(CURDIR)/hashes/$(notdir $@).sha256
 	mv $@.tmp/$(notdir $@) $@
 	rm -rf $@.tmp
 

@@ -1,4 +1,5 @@
 MUSL_VER = 1.2.5
+BINUTILS_VER = 2.47
 
 OUTPUT = /musl
 DL_CMD = curl -C - -L -o
