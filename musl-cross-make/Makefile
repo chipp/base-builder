@@ -90,6 +90,13 @@ $(SOURCES)/binutils-2.47.tar.xz: hashes/binutils-2.47.tar.xz.sha256 | $(SOURCES)
 	mv $@.tmp/$(notdir $@) $@
 	rm -rf $@.tmp
 
+$(SOURCES)/gcc-9.5.0.tar.xz: hashes/gcc-9.5.0.tar.xz.sha256 | $(SOURCES)
+	mkdir -p $@.tmp
+	cd $@.tmp && $(DL_CMD) $(notdir $@) $(GCC_SITE)/gcc-9.5.0/$(notdir $@)
+	cd $@.tmp && sha256sum -c $(CURDIR)/hashes/$(notdir $@).sha256
+	mv $@.tmp/$(notdir $@) $@
+	rm -rf $@.tmp
+
 $(SOURCES)/%: hashes/%.sha1 | $(SOURCES)
 	mkdir -p $@.tmp
 	cd $@.tmp && $(DL_CMD) $(notdir $@) $(SITE)/$(notdir $@)
