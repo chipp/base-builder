@@ -5,8 +5,34 @@ on:
     branches:
       - main
 
+concurrency:
+  group: docker-publish
+  cancel-in-progress: false
+
 jobs:
+  prepare:
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      revision: ${{ steps.version.outputs.revision }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Determine release version
+        id: version
+        run: |
+          MUSL_VERSION=$(awk '$1 == "MUSL_VER" && $2 == "=" { print $3; exit }' musl-cross-make/config.mak)
+          test -n "$MUSL_VERSION"
+          LAST_REVISION=$(git ls-remote --tags --refs origin | awk -v prefix="refs/tags/musl_${MUSL_VERSION}_" '
+            index($2, prefix) == 1 {
+              revision = substr($2, length(prefix) + 1)
+              if (revision ~ /^[0-9]+$/ && revision + 0 > max) max = revision + 0
+            }
+            END { print max + 0 }
+          ')
+          echo "revision=musl_${MUSL_VERSION}_$((LAST_REVISION + 1))" >> "$GITHUB_OUTPUT"
+
   build-platforms:
+    needs: prepare
     strategy:
       matrix:
         variant: [x86_64_musl, armv7_musl, arm64_musl]
@@ -26,29 +52,25 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Log into registry
-        run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+        env:
+          CR_PAT: ${{ secrets.CR_PAT }}
+        run: printf '%s\n' "$CR_PAT" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Expose GitHub Runtime
-        uses: crazy-max/ghaction-github-runtime@v1
+        uses: crazy-max/ghaction-github-runtime@04d248b84655b509d8c44dc1d6f990c879747487 # v4.0.0
 
       - name: Build and push image
         run: |
           IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.variant }}
 
-          MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
-          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
-          FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
-
           echo IMAGE_ID=$IMAGE_ID
-          echo MUSL_VERSION=$MUSL_VERSION
-          echo FULL_REVISION=$FULL_REVISION
 
           docker buildx build . \
              --push \
@@ -57,58 +79,57 @@ jobs:
              --cache-to=type=gha,scope=${{ matrix.variant }}-${{ matrix.host }},mode=max \
              --build-arg TARGET="${{ matrix.target }}" \
              --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-             --tag $IMAGE_ID:$FULL_REVISION-linux-${{ matrix.host }}
+             --tag $IMAGE_ID:build-${{ github.run_id }}-linux-${{ matrix.host }}
 
   merge-multi-arch:
     runs-on: ubuntu-24.04-arm
-    needs: build-platforms
+    needs: [prepare, build-platforms]
     strategy:
       matrix:
         variant: [x86_64_musl, armv7_musl, arm64_musl]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Log into registry
-        run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+        env:
+          CR_PAT: ${{ secrets.CR_PAT }}
+        run: printf '%s\n' "$CR_PAT" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Merge and push
         run: |
           IMAGE_ID=ghcr.io/chipp/build.musl.${{ matrix.variant }}
 
-          MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
-          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
-          FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
+          FULL_REVISION=${{ needs.prepare.outputs.revision }}
 
           echo IMAGE_ID=$IMAGE_ID
-          echo MUSL_VERSION=$MUSL_VERSION
           echo FULL_REVISION=$FULL_REVISION
 
           docker buildx imagetools create \
              --tag $IMAGE_ID:$FULL_REVISION \
              --tag $IMAGE_ID:latest \
-             $IMAGE_ID:$FULL_REVISION-linux-amd64 \
-             $IMAGE_ID:$FULL_REVISION-linux-arm64
+             $IMAGE_ID:build-${{ github.run_id }}-linux-amd64 \
+             $IMAGE_ID:build-${{ github.run_id }}-linux-arm64
 
   create-tag:
     runs-on: ubuntu-24.04-arm
-    needs: merge-multi-arch
+    needs: [prepare, merge-multi-arch]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Log into registry
-        run: echo ${{ secrets.CR_PAT }} | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+        env:
+          CR_PAT: ${{ secrets.CR_PAT }}
+        run: printf '%s\n' "$CR_PAT" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
       - name: Create a tag
         run: |
-          MUSL_VERSION=musl_$(cat musl-cross-make/config.mak | grep "MUSL_VER" | sed -e 's,MUSL_VER = \(.*\),\1,' | tr -d '\n')
-          LAST_REVISION=$(git ls-remote --tags origin | grep $MUSL_VERSION | cut -f 2 | sort -Vr | head -n 1 | sed -e 's,.*_\(.*\),\1,')
-          FULL_REVISION=${MUSL_VERSION}_$((LAST_REVISION+1))
+          FULL_REVISION=${{ needs.prepare.outputs.revision }}
 
           git tag $FULL_REVISION HEAD
           git push origin $FULL_REVISION

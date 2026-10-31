@@ -37,7 +37,8 @@ ENV TARGET=${TARGET} \
     PATH=/musl/bin:/python/bin:$PATH
 
 COPY meson/${TARGET}.cross /musl/meson.cross
-RUN python3 -m venv python && pip3 install meson
+RUN --mount=from=ghcr.io/astral-sh/uv:0.13.6,source=/uv,target=/usr/local/bin/uv \
+    python3 -m venv python && uv pip install --python /python/bin/python meson==1.12.1
 
 ENV TARGET_CC=/musl/bin/$TARGET-gcc \
     TARGET_CXX=/musl/bin/$TARGET-g++ \
@@ -52,4 +53,4 @@ ENV CC=$TARGET_CC \
     CPPFLAGS="-I$PREFIX/include" \
     PKG_CONFIG_ALLOW_CROSS=true \
     PKG_CONFIG_ALL_STATIC=true \
-    PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig:$PREFIX/lib64/pkgconfig
+    PKG_CONFIG_LIBDIR=$PREFIX/lib/pkgconfig:$PREFIX/lib64/pkgconfig:$PREFIX/share/pkgconfig
